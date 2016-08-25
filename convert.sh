@@ -21,16 +21,16 @@
 id=$1
 cmdA=$2
 cmdB=$3
-header=(7E 00 0E 00 00)
+header=(7E 00 10 00 00)
 sum=0
 fullmessage=0
 
 
 ##################### Verifies if there is a valid ID
 case "$id" in 
-0) address=(00 13 A2 00 40 A8 C4 C5 00);;
-1) address=(00 13 A2 00 40 A8 C4 B4 00);;
-2) address=(00 13 A2 00 40 A8 C4 FA 00);;
+0) address=(00 13 A2 00 40 A8 C4 C5 00 0A);;
+1) address=(00 13 A2 00 40 A8 C4 B4 00 0A);;
+2) address=(00 13 A2 00 40 A8 C4 FA 00 0A);;
 *) echo "ID Invalido!!";exit 
 esac
 
@@ -40,7 +40,7 @@ esac
 if test -n "$cmdA" && test -n "$cmdB" 
 then
 ##################### Verifies if pwm on both motors is less than 255, if is, set direction indicator byte to 00
-	if test "$cmdA" -lt 256 && test "$cmdB" -lt 255 
+	if test "$cmdA" -lt 256 && test "$cmdB" -lt 256 
 	then
 ##################### Verifies if pwm on both motors is positive
 		if test "$cmdA" -ge 0 && test "$cmdB" -ge 0
@@ -49,9 +49,9 @@ then
 			then
 				cmdA=$(echo "obase=16;$cmdA" | bc)
 				cmdB=$(echo "obase=16;$cmdB" | bc)
-				message=(00 "$cmdA" "$cmdB")
+				message=(00 "$cmdA" "$cmdB" 0B)
 			else
-				message=(00 00 00)
+				message=(00 00 00 0B)
 			fi	
 		else
 			echo "PWM Invalido"
@@ -69,9 +69,9 @@ then
 				auxA=$(($cmdA-255))
 				cmdA=$(echo "obase=16;$auxA" | bc)
 				cmdB=$(echo "obase=16;$cmdB" | bc)
-				message=(10 "$cmdA" "$cmdB")
+				message=(10 "$cmdA" "$cmdB" 0B) #0B
 			else
-				message=(10 "$cmdA" 00)
+				message=(10 "$cmdA" 00  0B) #0B
 			fi
 		else
 			echo "PWM Invalido!"
@@ -89,9 +89,9 @@ then
 				auxB=$(($cmdB-255))
 				cmdA=$(echo "obase=16;$cmdA" | bc)
 				cmdB=$(echo "obase=16;$auxB" | bc)
-				message=(01 "$cmdA" "$cmdB") 
-			else
-				message=(01 00 "$cmdB")
+				message=(01 "$cmdA" "$cmdB" 0B) #
+			else	
+				message=(01 00 "$cmdB" 0B) #
 			fi
 		else
 			echo "PWM Invalido!"
@@ -107,7 +107,7 @@ then
 			auxB=$(($cmdB-255))
 			cmdA=$(echo "obase=16;$auxA" | bc)
 			cmdB=$(echo "obase=16;$auxB" | bc)
-			message=(11 "$cmdA" "$cmdB")
+			message=(11 "$cmdA" "$cmdB" 0B) #
 		else
 			echo "PWM Invalido!"
 			exit
@@ -150,7 +150,8 @@ fullmessage="$fullmessage"" ""$i"
 done
 
 ################## Cuts the 8 digits from the sum variable after it's converted to binary 
-sum=$(echo "obase=2;ibase=16;$sum" | bc | tail -c 8)
+#sum=$(echo "obase=2;ibase=16;$sum" | bc ) #| tail -c 8)
+sum=$(echo "obase=2;ibase=16;$sum" | bc | tail -c 9)
 ################## Reconvert to HEXADECIMAL
 sum=$(echo "obase=16;ibase=2;$sum" | bc)
 ################## Aplly the checksum calculation formula
@@ -159,5 +160,5 @@ checksum=$(echo "obase=16;ibase=16;FF-$sum"| bc)
 fullmessage="$fullmessage"" ""$checksum"
 
 ################## returns the full message
-echo "$fullmessage" |tr -d ' '  | cut -c 2-
+echo "$fullmessage"   |tr -d ' ' | cut -c 2-
 

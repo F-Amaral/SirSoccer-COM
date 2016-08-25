@@ -104,7 +104,9 @@ void Communication::protocolsCommand(){
 }
 
 bool Communication::sendSerialData(Command *cmd){
+	
 	#ifdef OLD_TRANSMISSION
+	
 		for(int i = 0 ; i < 3 ; i++)
 			vecCommand[i] = cmd[i];
 
@@ -120,25 +122,29 @@ bool Communication::sendSerialData(Command *cmd){
 		}else{
 	    	setInterfaceAttribs();
 	    	setBlocking();
-
 	        write(fd, (char*)(&command), 8);
 	    }
 	    close(fd);
+	
 	#else
+
 	    stringstream ss;
 		string s;
 		string comando;
 		bool ok = true;
+
 		for(int i = 0 ; i < 3 ; i++){
 			int count = 0; 
 			vecCommand[i] = cmd[i];
-			unsigned char convComando[18];
+			unsigned char convComando[20];
 			protocolsCommand();
 			ss<<"./convert.sh" << " " << i << " " <<vecCommand[i].vel[0] << " " << vecCommand[i].vel[1];
 			s = ss.str();
 			comando = cmdTerminal(s.c_str());
-			//usleep(8000);
-			for(int j = 0 ; j < 36; j++){ //36
+			if (i == 0){
+				cout << comando << endl;
+			}
+			for(int j = 0 ; j < 41; j++){ //36
 				char a = 0;
 				char b = 0;
 				stringstream cmdConv;
@@ -147,33 +153,23 @@ bool Communication::sendSerialData(Command *cmd){
 				b = comando[j]; 
 				cmdConv << "0x" << a << b;
 				convComando[count]  = stoi(cmdConv.str().c_str(), 0, 16);
-			
 				clearSS(cmdConv);		
 				count++;		
-			}	
-				
-			/*printf("\n");		
-			for(int j = 0 ; j < 18 ; j++){
-				printf("%x",convComando[j]);
-			}	
-			cout << endl;*/
-	
+				usleep(100);
+			}
+		
 			fd = open(serialPort.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
 			if (fd < 0) {
-				//printf ("Transmissor desconectado \n");
-	        		ok = false;
+	        	ok = false;
 			}else{
 	    			setInterfaceAttribs();
 	    			setBlocking();
 	        		write(fd, convComando, sizeof(convComando));    		
 	    		}	
-			usleep(10000);
-	    		close(fd);
+			usleep(5000);
+	    	close(fd);
 			clearSS(ss);
 		}
-
-		char str[2];
-
 	#endif
 
     return ok;

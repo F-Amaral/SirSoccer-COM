@@ -29,6 +29,7 @@ private:
 	void setBlocking();
 	void setInterfaceAttribs();
 	void protocolsCommand();
+	
 
 public:
 	Communication();
