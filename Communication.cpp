@@ -141,9 +141,9 @@ bool Communication::sendSerialData(Command *cmd){
 			ss<<"./src/SirSoccer-COM/convert.sh" << " " << i << " " <<vecCommand[i].vel[0] << " " << vecCommand[i].vel[1];
 			s = ss.str();
 			comando = cmdTerminal(s.c_str());
-			if (i == 0){
+			/*if (i == 0){
 				cout << comando << endl;
-			}
+			}*/
 			for(int j = 0 ; j < 41; j++){ //36
 				char a = 0;
 				char b = 0;
