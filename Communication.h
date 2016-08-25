@@ -21,6 +21,8 @@
 #include <string.h>
 #include "sstream"
 
+using namespace std;
+
 class Communication{
 private:
 	string serialPort;
