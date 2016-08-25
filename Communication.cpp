@@ -7,7 +7,7 @@
  *		Membros (2015): Johnathan Fercher, Oscar Neiva, Lucas Borsatto, Hebert Luiz, Felipe Amaral, Manoel Stilpen e Samantha Vilaça.
  */
  
-#include "Header.h"
+#include "Communication.h"
 
 Communication::Communication(){
 	shouldBlock = 0;

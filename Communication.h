@@ -10,10 +10,17 @@
 #ifndef COMMUNICATION_H_
 #define COMMUNICATION_H_
 
-#include "Header.h"
+#include <errno.h>
+#include <termios.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include "ctime"
+#include "ctype.h"
+#include "unistd.h"
+#include "../commons.h"
+#include <string.h>
 
 class Communication{
-
 private:
 	string serialPort;
 	int socketPort;
