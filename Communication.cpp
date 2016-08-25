@@ -138,7 +138,7 @@ bool Communication::sendSerialData(Command *cmd){
 			vecCommand[i] = cmd[i];
 			unsigned char convComando[20];
 			protocolsCommand();
-			ss<<"./convert.sh" << " " << i << " " <<vecCommand[i].vel[0] << " " << vecCommand[i].vel[1];
+			ss<<"./src/SirSoccer-COM/convert.sh" << " " << i << " " <<vecCommand[i].vel[0] << " " << vecCommand[i].vel[1];
 			s = ss.str();
 			comando = cmdTerminal(s.c_str());
 			if (i == 0){
