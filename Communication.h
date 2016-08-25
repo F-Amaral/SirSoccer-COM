@@ -19,6 +19,7 @@
 #include "unistd.h"
 #include "../commons.h"
 #include <string.h>
+#include "sstream"
 
 class Communication{
 private:
