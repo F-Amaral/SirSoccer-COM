@@ -23,10 +23,8 @@
 *.a
 *.lib
 
-# Visual Code files
-*.vscode
-
-# Proto files
+# remove junk files
+*.vscode/.browse.VC.*
 *.pb.cc
 *.pb.h
 
