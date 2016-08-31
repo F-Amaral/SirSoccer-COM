@@ -23,6 +23,14 @@
 *.a
 *.lib
 
+# Visual Code files
+*.vscode
+
+# Proto files
+*.pb.cc
+*.pb.h
+
+
 # Executables
 *.exe
 *.out
