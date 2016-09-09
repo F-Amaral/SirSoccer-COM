@@ -86,16 +86,16 @@ void Communication::protocolsCommand(){
 	stringstream ss;
 	for(int i = 0 ; i < 3 ; i++){
 
-		if(vecCommand[i].vel[esquerda] < 100){
-			ss << 0 << vecCommand[i].vel[esquerda];
+		if(vecCommand[i].left < 100){
+			ss << 0 << vecCommand[i].left;
 		} else {
-			ss << vecCommand[i].vel[esquerda];
+			ss << vecCommand[i].left;
 		}
 
-		if(vecCommand[i].vel[direita] < 100){
-			ss << 0 << vecCommand[i].vel[direita];
+		if(vecCommand[i].right < 100){
+			ss << 0 << vecCommand[i].right;
 		} else {
-			ss << vecCommand[i].vel[direita];
+			ss << vecCommand[i].right;
 		}
 
 	}
@@ -138,7 +138,7 @@ bool Communication::sendSerialData(Command *cmd){
 			vecCommand[i] = cmd[i];
 			unsigned char convComando[20];
 			protocolsCommand();
-			ss<<"./src/SirSoccer-COM/convert.sh" << " " << i << " " <<vecCommand[i].vel[0] << " " << vecCommand[i].vel[1];
+			ss<<"./src/SirSoccer-COM/convert.sh" << " " << i << " " <<vecCommand[i].left << " " << vecCommand[i].right;
 			s = ss.str();
 			comando = cmdTerminal(s.c_str());
 			/*if (i == 0){

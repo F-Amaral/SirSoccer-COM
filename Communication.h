@@ -22,6 +22,7 @@
 #include "sstream"
 
 using namespace std;
+using namespace common;
 
 class Communication{
 private:
