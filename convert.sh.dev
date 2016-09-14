@@ -31,7 +31,7 @@ FULL_MESSAGE=0
 #*) echo "ID Invalido!!";exit 
 #esac
 
-ADDRESS=(00 00 00 00 00 00 FF FF 00 0A)
+ADDRESS=(00 00 00 00 00 00 FF FF 00)
 
 CALCULATE_PWM () { 
 	##################### Verifies if there is a parameter for both pwm, if not, exit
@@ -50,7 +50,7 @@ CALCULATE_PWM () {
 				then
 					CMD_A=$(echo "obase=16;$CMD_A" | bc)
 					CMD_B=$(echo "obase=16;$CMD_B" | bc)
-					MESSAGE=(00 "$CMD_A" "$CMD_B" 0B)
+					MESSAGE=(00 "$CMD_A" "$CMD_B" 0D)
 				else
 					MESSAGE=(00 00 00 0B)
 				fi	
@@ -70,9 +70,9 @@ CALCULATE_PWM () {
 					AUX_A=$(($CMD_A-255))
 					CMD_A=$(echo "obase=16;$AUX_A" | bc)
 					CMD_B=$(echo "obase=16;$CMD_B" | bc)
-					MESSAGE=(10 "$CMD_A" "$CMD_B" 0B) #0B
+					MESSAGE=(10 "$CMD_A" "$CMD_B" 0D) #0B
 				else
-					MESSAGE=(10 "$CMD_A" 00  0B) #0B
+					MESSAGE=(10 "$CMD_A" 00  0D) #0B
 				fi
 			else
 				echo "PWM Invalido!"
@@ -90,9 +90,9 @@ CALCULATE_PWM () {
 					AUX_B=$(($CMD_B-255))
 					CMD_A=$(echo "obase=16;$CMD_A" | bc)
 					CMD_B=$(echo "obase=16;$AUX_B" | bc)
-					MESSAGE=(01 "$CMD_A" "$CMD_B" 0B) #
+					MESSAGE=(01 "$CMD_A" "$CMD_B" 0D) #
 				else	
-					MESSAGE=(01 00 "$CMD_B" 0B) #
+					MESSAGE=(01 00 "$CMD_B" 0D) #
 				fi
 			else
 				echo "PWM Invalido!"
@@ -108,7 +108,7 @@ CALCULATE_PWM () {
 				AUX_B=$(($CMD_B-255))
 				CMD_A=$(echo "obase=16;$AUX_A" | bc)
 				CMD_B=$(echo "obase=16;$AUX_B" | bc)
-				MESSAGE=(11 "$CMD_A" "$CMD_B" 0B) #
+				MESSAGE=(11 "$CMD_A" "$CMD_B" 0D) #
 			else
 				echo "PWM Invalido!"
 				exit
@@ -127,9 +127,9 @@ CALCULATE_PWM () {
 	done
 }
 
-MESSAGE=$(CALCULATE_PWM "$1" "$2")
-MESSAGE+=$(CALCULATE_PWM "$3" "$4")
-MESSAGE+=$(CALCULATE_PWM "$5" "$6")
+MESSAGE="0A$(CALCULATE_PWM "$1" "$2")"
+MESSAGE+="0B$(CALCULATE_PWM "$3" "$4")"
+MESSAGE+="0C$(CALCULATE_PWM "$5" "$6")"
 echo "$MESSAGE"
 #echo "Mensagem Parcial: "
 #for i in "${MESSAGE[@]}"
@@ -166,7 +166,7 @@ do
 done
 
 ################## Cuts the 8 digits from the SUM variable after it's converted to binary 
-#SUM=$(echo "obase=2;ibase=16;$SUM" | bc ) #| tail -c 8)
+################## Cutting um more char to compensate for the control char LINE_FEED "0x0A" in hex 
 SUM=$(echo "obase=2;ibase=16;$SUM" | bc | tail -c 9)
 ################## Reconvert to HEXADECIMAL
 SUM=$(echo "obase=16;ibase=2;$SUM" | bc)
