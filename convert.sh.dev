@@ -55,8 +55,8 @@ CALCULATE_PWM () {
 					MESSAGE=(00 00 00 0B)
 				fi	
 			else
-				echo "PWM Invalido"
-				exit
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
 			fi
 	#################### Verifies if pwm on motor A is greater than 255, if it is
 	#################### and pwm on motor b is lesser than 256, set direction indicator byte to 10
@@ -75,8 +75,8 @@ CALCULATE_PWM () {
 					MESSAGE=(10 "$CMD_A" 00  0D) #0B
 				fi
 			else
-				echo "PWM Invalido!"
-				exit	
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
 			fi
 	################### Verify if the pwm on motor B is greater than 255, if it is
 	################### and pwm on motor A is lesser than 256, set direction indicator byte to 01
@@ -95,8 +95,8 @@ CALCULATE_PWM () {
 					MESSAGE=(01 00 "$CMD_B" 0D) #
 				fi
 			else
-				echo "PWM Invalido!"
-				exit
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
 			fi
 	################## Verify if both pwm's are greater than 255, if they are, set direction indicator byte to 11
 		elif test "$CMD_A" -gt 255 && test "$CMD_B" -gt 255
@@ -110,27 +110,32 @@ CALCULATE_PWM () {
 				CMD_B=$(echo "obase=16;$AUX_B" | bc)
 				MESSAGE=(11 "$CMD_A" "$CMD_B" 0D) #
 			else
-				echo "PWM Invalido!"
-				exit
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
 			fi
 		else 
-			echo valor Invalido!
-			exit
+			echo "Valor Invalido! ABORTANDO!!!" 1>&2
+			exit 1
 		fi
 	else
-		echo "verifique o parametro!";
-		exit
+		echo "Verifique os parametros! ABORTANDO!!!" 1>&2
+		exit 1
 	fi
+	FUNCTION_RETURN=""
 	for i in "${MESSAGE[@]}"
 	do
-		echo -n "$i"
+		FUNCTION_RETURN+="$i"
 	done
+	echo "$FUNCTION_RETURN"
 }
 
-MESSAGE="0A$(CALCULATE_PWM "$1" "$2")"
-MESSAGE+="0B$(CALCULATE_PWM "$3" "$4")"
-MESSAGE+="0C$(CALCULATE_PWM "$5" "$6")"
-echo "$MESSAGE"
+MESSAGE="0A$(CALCULATE_PWM "$1" "$2" || exit 1)"
+ROBOT_0=$?
+MESSAGE+="0B$(CALCULATE_PWM "$3" "$4" || exit 1)"
+ROBOT_1=$?
+MESSAGE+="0C$(CALCULATE_PWM "$5" "$6" || exit 1)"
+ROBOT_2=$?
+
 #echo "Mensagem Parcial: "
 #for i in "${MESSAGE[@]}"
 #do
@@ -138,16 +143,17 @@ echo "$MESSAGE"
 #done
 #echo "\n"
 ################## Starts the CHECK_SUM calculation operates on ADDRESS
-
 for i in "${ADDRESS[@]}"
 do
    SUM+="$i"
 done
+
 ################## After SUMming all ADDRESS bytes, SUMs the MESSAGE bytes
 for i in "${MESSAGE[@]}"
 do
    SUM+="$i"
 done
+
 ################## Starts writing the finalMessage, concatenate HEADER bytes on the final string
 for i in "${HEADER[@]}"
 do
@@ -159,6 +165,7 @@ for i in "${ADDRESS[@]}"
 do
 	FULL_MESSAGE+="$i"
 done
+
 ################## Now it's time to put the MESSAGE together
 for i in "${MESSAGE[@]}"
 do
@@ -172,9 +179,14 @@ SUM=$(echo "obase=2;ibase=16;$SUM" | bc | tail -c 9)
 SUM=$(echo "obase=16;ibase=2;$SUM" | bc)
 ################## Aplly the CHECK_SUM calculation formula
 CHECK_SUM=$(echo "obase=16;ibase=16;FF-$SUM"| bc)
+
 ################## Puts the CHECK_SUM on the end of the MESSAGE
 FULL_MESSAGE+="$CHECK_SUM"
 
 ################## returns the full MESSAGE
-echo "$FULL_MESSAGE"   |tr -d ' ' | cut -c 2-
+if [[ "$ROBOT_0" == "0" && "$ROBOT_1" == "0" && "$ROBOT_2" == "0" ]] ; then 
+	echo "$FULL_MESSAGE"   |tr -d ' ' | cut -c 2-  
+else 
+	exit 1 
+fi 
 
