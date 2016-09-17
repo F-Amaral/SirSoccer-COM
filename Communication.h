@@ -21,6 +21,8 @@
 #include <string.h>
 #include "sstream"
 
+#define BROADCAST true
+
 using namespace std;
 using namespace common;
 
