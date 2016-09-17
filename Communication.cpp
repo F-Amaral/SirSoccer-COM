@@ -133,18 +133,26 @@ bool Communication::sendSerialData(Command *cmd){
 		string comando;
 		bool ok = true;
 
+		#ifdef BROADCAST
 		for(int i = 0 ; i < 1 ; i++){
+		#else
+		for(int i = 0 ; i < 3 ; i++){
+		#endif
 			int count = 0; 
 			vecCommand[i] = cmd[i];
 			unsigned char convComando[20];
 			protocolsCommand();
-			
-			ss << "./src/SirSoccer-COM/convert.sh.dev";
+		#ifdef BROADCAST
+			ss << "./src/SirSoccer-COM/convertBroadcast.sh";
 			ss << " " << (int) vecCommand[0].left << " " << (int) vecCommand[0].right;
 			ss << " " << (int) vecCommand[1].left << " " << (int) vecCommand[1].right;
 			ss << " " << (int) vecCommand[2].left << " " << (int) vecCommand[2].right;
+		#else
+			ss << "./src/SirSocer-COM/convert.sh";
+			ss << i;
+			ss << " " << (int) vecCOmmand[i].left << " " << (int) vecCOmmand[i].right;
+		#endif	
 			s = ss.str();
-			
 			comando = cmdTerminal(s.c_str());
 			
 			if (i == 0){
