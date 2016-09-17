@@ -172,12 +172,10 @@ do
 	FULL_MESSAGE+="$i"
 done
 
-echo "$SUM"
 ################## Cuts the 8 digits from the SUM variable after it's converted to binary 
 ################## Cutting um more char to compensate for the control char LINE_FEED "0x0A" in hex 
 SUM=$(echo "obase=2;ibase=16;$SUM" | bc | tail -c 9)
 
-echo "$SUM"
 ################## Reconvert to HEXADECIMAL
 SUM=$(echo "obase=16;ibase=2;$SUM" | bc)
 ################## Aplly the CHECK_SUM calculation formula
