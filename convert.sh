@@ -149,6 +149,7 @@ do
 fullmessage="$fullmessage"" ""$i"
 done
 
+echo "$sum"
 ################## Cuts the 8 digits from the sum variable after it's converted to binary 
 #sum=$(echo "obase=2;ibase=16;$sum" | bc ) #| tail -c 8)
 sum=$(echo "obase=2;ibase=16;$sum" | bc | tail -c 9)
