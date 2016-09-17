@@ -19,7 +19,7 @@
 #
 
 #id=$1
-HEADER=(7E 00 1A 00 00)
+HEADER=(7E 00 18 00 00)
 SUM=0
 FULL_MESSAGE=0
 
@@ -50,8 +50,8 @@ CALCULATE_PWM () {
 				then
 					CMD_A=$(echo "obase=16;$CMD_A" | bc)
 					CMD_B=$(echo "obase=16;$CMD_B" | bc)
-					MESSAGE=(00 "$CMD_A" "$CMD_B" 0D)
-				else
+					MESSAGE=(00 "$CMD_A" "$CMD_B") #0D
+ 				else
 					MESSAGE=(00 00 00 0B)
 				fi	
 			else
@@ -70,9 +70,9 @@ CALCULATE_PWM () {
 					AUX_A=$(($CMD_A-255))
 					CMD_A=$(echo "obase=16;$AUX_A" | bc)
 					CMD_B=$(echo "obase=16;$CMD_B" | bc)
-					MESSAGE=(10 "$CMD_A" "$CMD_B" 0D) #0B
+					MESSAGE=(10 "$CMD_A" "$CMD_B") #0B 0D
 				else
-					MESSAGE=(10 "$CMD_A" 00  0D) #0B
+					MESSAGE=(10 "$CMD_A" 00) #0B 0D
 				fi
 			else
 				echo "PWM Invalido! ABORTANDO!!!" 1>&2
@@ -90,9 +90,9 @@ CALCULATE_PWM () {
 					AUX_B=$(($CMD_B-255))
 					CMD_A=$(echo "obase=16;$CMD_A" | bc)
 					CMD_B=$(echo "obase=16;$AUX_B" | bc)
-					MESSAGE=(01 "$CMD_A" "$CMD_B" 0D) #
+					MESSAGE=(01 "$CMD_A" "$CMD_B" ) #0D
 				else	
-					MESSAGE=(01 00 "$CMD_B" 0D) #
+					MESSAGE=(01 00 "$CMD_B" ) #0D
 				fi
 			else
 				echo "PWM Invalido! ABORTANDO!!!" 1>&2
@@ -108,7 +108,7 @@ CALCULATE_PWM () {
 				AUX_B=$(($CMD_B-255))
 				CMD_A=$(echo "obase=16;$AUX_A" | bc)
 				CMD_B=$(echo "obase=16;$AUX_B" | bc)
-				MESSAGE=(11 "$CMD_A" "$CMD_B" 0D) #
+				MESSAGE=(11 "$CMD_A" "$CMD_B" ) #0D
 			else
 				echo "PWM Invalido! ABORTANDO!!!" 1>&2
 				exit 1
@@ -129,11 +129,11 @@ CALCULATE_PWM () {
 	echo "$FUNCTION_RETURN"
 }
 
-MESSAGE=(0A $(CALCULATE_PWM "$1" "$2" || exit 1) )
+MESSAGE=(0A$(CALCULATE_PWM "$1" "$2" || exit 1) 0B)
 ROBOT_0=$?
-MESSAGE+=(0B $(CALCULATE_PWM "$3" "$4" || exit 1) )
+MESSAGE+=($(CALCULATE_PWM "$3" "$4" || exit 1) 0C)
 ROBOT_1=$?
-MESSAGE+=(0C $(CALCULATE_PWM "$5" "$6" || exit 1))
+MESSAGE+=($(CALCULATE_PWM "$5" "$6" || exit 1) 0D)
 ROBOT_2=$?
 
 #echo "Mensagem Parcial: "
