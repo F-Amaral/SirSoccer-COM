@@ -189,6 +189,7 @@ FULL_MESSAGE+="$CHECK_SUM"
 ################## returns the full MESSAGE
 if [[ "$ROBOT_0" == "0" && "$ROBOT_1" == "0" && "$ROBOT_2" == "0" ]] ; then 
 	echo "$FULL_MESSAGE"   |tr -d ' ' | cut -c 2-  
+	exit 0
 else 
 	exit 1 
 fi 
