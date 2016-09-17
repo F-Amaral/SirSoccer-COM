@@ -9,172 +9,184 @@
 #
 # This script was developed to create an API frame
 # containing Robot (id motorApwm motorBpwm )
-# Returns a string containing initial message header
-# robot address+config (config,hexa,16 bits )(address,hexa, 64 bits)(config,hexa, 8 bits)
-# command message (message, hexa, 24 bits)
-# and checksum (checksum, hexa, 8 bits)
+# Returns a string containing initial MESSAGE HEADER
+# robot ADDRESS+config (config,hexa,16 bits )(ADDRESS,hexa, 64 bits)(config,hexa, 8 bits)
+# command MESSAGE (MESSAGE, hexa, 24 bits)
+# and CHECK_SUM (CHECK_SUM, hexa, 8 bits)
 #
-# Cheksum is calculated by excracting the 8 least significant bits from address+message, 
-# and performing FF - sum
+# ChekSUM is calculated by excracting the 8 least significant bits from ADDRESS+MESSAGE, 
+# and performing FF - SUM
 #
 
 #id=$1
-header=(7E 00 10 00 00)
-sum=0
-fullmessage=0
+HEADER=(7E 00 10 00 00)
+SUM=0
+FULL_MESSAGE=0
 
 ##################### Verifies if there is a valid ID
 #case "$id" in 
-#0) address=(00 13 A2 00 40 A8 C4 C5 00 0A);;
-#1) address=(00 13 A2 00 40 A8 C4 B4 00 0A);;
-#2) address=(00 13 A2 00 40 A8 C4 FA 00 0A);;
+#0) ADDRESS=(00 13 A2 00 40 A8 C4 C5 00 0A);;
+#1) ADDRESS=(00 13 A2 00 40 A8 C4 B4 00 0A);;
+#2) ADDRESS=(00 13 A2 00 40 A8 C4 FA 00 0A);;
 #*) echo "ID Invalido!!";exit 
 #esac
 
-address=(00 00 00 00 00 00 FF FF 00 0A)
+ADDRESS=(00 00 00 00 00 00 FF FF 00)
 
 CALCULATE_PWM () { 
-##################### Verifies if there is a parameter for both pwm, if not, exit
-cmdA="$1"
-cmdB="$2"
+	##################### Verifies if there is a parameter for both pwm, if not, exit
+	CMD_A="$1"
+	CMD_B="$2"
 
-if test -n "$cmdA" && test -n "$cmdB" 
-then
-##################### Verifies if pwm on both motors is less than 255, if is, set direction indicator byte to 00
-	if test "$cmdA" -lt 256 && test "$cmdB" -lt 256 
+	if test -n "$CMD_A" && test -n "$CMD_B" 
 	then
-##################### Verifies if pwm on both motors is positive
-		if test "$cmdA" -ge 0 && test "$cmdB" -ge 0
+	##################### Verifies if pwm on both motors is less than 255, if is, set direction indicator byte to 00
+		if test "$CMD_A" -lt 256 && test "$CMD_B" -lt 256 
 		then
-			if test "$cmdA" -ge 16 && test "$cmdB" -ge 16
+	##################### Verifies if pwm on both motors is positive
+			if test "$CMD_A" -ge 0 && test "$CMD_B" -ge 0
 			then
-				cmdA=$(echo "obase=16;$cmdA" | bc)
-				cmdB=$(echo "obase=16;$cmdB" | bc)
-				message=(00 "$cmdA" "$cmdB" 0B)
+				if test "$CMD_A" -ge 16 && test "$CMD_B" -ge 16
+				then
+					CMD_A=$(echo "obase=16;$CMD_A" | bc)
+					CMD_B=$(echo "obase=16;$CMD_B" | bc)
+					MESSAGE=(00 "$CMD_A" "$CMD_B" 0D)
+				else
+					MESSAGE=(00 00 00 0B)
+				fi	
 			else
-				message=(00 00 00 0B)
-			fi	
-		else
-			echo "PWM Invalido"
-			exit
-		fi
-#################### Verifies if pwm on motor A is greater than 255, if it is
-#################### and pwm on motor b is lesser than 256, set direction indicator byte to 10
-	elif test "$cmdA" -gt 255 && test "$cmdB" -lt 256
-	then
-#################### Verify if the pwm on motor A is lesser than 511
-		if test "$cmdA" -lt 511 && test "$cmdB" -ge 0
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
+			fi
+	#################### Verifies if pwm on motor A is greater than 255, if it is
+	#################### and pwm on motor b is lesser than 256, set direction indicator byte to 10
+		elif test "$CMD_A" -gt 255 && test "$CMD_B" -lt 256
 		then
-			if test "$cmdB" -ge 16
+	#################### Verify if the pwm on motor A is lesser than 511
+			if test "$CMD_A" -lt 511 && test "$CMD_B" -ge 0
 			then
-				auxA=$(($cmdA-255))
-				cmdA=$(echo "obase=16;$auxA" | bc)
-				cmdB=$(echo "obase=16;$cmdB" | bc)
-				message=(10 "$cmdA" "$cmdB" 0B) #0B
+				if test "$CMD_B" -ge 16
+				then
+					AUX_A=$(($CMD_A-255))
+					CMD_A=$(echo "obase=16;$AUX_A" | bc)
+					CMD_B=$(echo "obase=16;$CMD_B" | bc)
+					MESSAGE=(10 "$CMD_A" "$CMD_B" 0D) #0B
+				else
+					MESSAGE=(10 "$CMD_A" 00  0D) #0B
+				fi
 			else
-				message=(10 "$cmdA" 00  0B) #0B
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
 			fi
-		else
-			echo "PWM Invalido!"
-			exit	
-		fi
-################### Verify if the pwm on motor B is greater than 255, if it is
-################### and pwm on motor A is lesser than 256, set direction indicator byte to 01
-	elif test "$cmdA" -lt 256 && test "$cmdB" -gt 255
-	then
-################### Verify if the pwm on motor B is lesser than 511
-		if test "$cmdA" -ge 0 && test "$cmdB" -lt 511
+	################### Verify if the pwm on motor B is greater than 255, if it is
+	################### and pwm on motor A is lesser than 256, set direction indicator byte to 01
+		elif test "$CMD_A" -lt 256 && test "$CMD_B" -gt 255
 		then
-			if test "$cmdA" -ge 16
+	################### Verify if the pwm on motor B is lesser than 511
+			if test "$CMD_A" -ge 0 && test "$CMD_B" -lt 511
 			then
-				auxB=$(($cmdB-255))
-				cmdA=$(echo "obase=16;$cmdA" | bc)
-				cmdB=$(echo "obase=16;$auxB" | bc)
-				message=(01 "$cmdA" "$cmdB" 0B) #
-			else	
-				message=(01 00 "$cmdB" 0B) #
+				if test "$CMD_A" -ge 16
+				then
+					AUX_B=$(($CMD_B-255))
+					CMD_A=$(echo "obase=16;$CMD_A" | bc)
+					CMD_B=$(echo "obase=16;$AUX_B" | bc)
+					MESSAGE=(01 "$CMD_A" "$CMD_B" 0D) #
+				else	
+					MESSAGE=(01 00 "$CMD_B" 0D) #
+				fi
+			else
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
 			fi
-		else
-			echo "PWM Invalido!"
-			exit
-		fi
-################## Verify if both pwm's are greater than 255, if they are, set direction indicator byte to 11
-	elif test "$cmdA" -gt 255 && test "$cmdB" -gt 255
-	then
-################## Verify if both pwm's are lesser than 511
-		if test "$cmdA" -lt 511 && test "$cmdB" -lt 511
+	################## Verify if both pwm's are greater than 255, if they are, set direction indicator byte to 11
+		elif test "$CMD_A" -gt 255 && test "$CMD_B" -gt 255
 		then
-			auxA=$(($cmdA-255))
-			auxB=$(($cmdB-255))
-			cmdA=$(echo "obase=16;$auxA" | bc)
-			cmdB=$(echo "obase=16;$auxB" | bc)
-			message=(11 "$cmdA" "$cmdB" 0B) #
-		else
-			echo "PWM Invalido!"
-			exit
+	################## Verify if both pwm's are lesser than 511
+			if test "$CMD_A" -lt 511 && test "$CMD_B" -lt 511
+			then
+				AUX_A=$(($CMD_A-255))
+				AUX_B=$(($CMD_B-255))
+				CMD_A=$(echo "obase=16;$AUX_A" | bc)
+				CMD_B=$(echo "obase=16;$AUX_B" | bc)
+				MESSAGE=(11 "$CMD_A" "$CMD_B" 0D) #
+			else
+				echo "PWM Invalido! ABORTANDO!!!" 1>&2
+				exit 1
+			fi
+		else 
+			echo "Valor Invalido! ABORTANDO!!!" 1>&2
+			exit 1
 		fi
-	else 
-		echo valor Invalido!
-		exit
+	else
+		echo "Verifique os parametros! ABORTANDO!!!" 1>&2
+		exit 1
 	fi
-else
-	echo "verifique o parametro!";
-	exit
-fi
-for i in "${message[@]}"
-do
-	echo -n "$i"
-done
+	FUNCTION_RETURN=""
+	for i in "${MESSAGE[@]}"
+	do
+		FUNCTION_RETURN+="$i"
+	done
+	echo "$FUNCTION_RETURN"
 }
 
-message="$( CALCULATE_PWM "$1" "$2" )"
-message=("$message" "$( CALCULATE_PWM "$3" "$4" )")
-message=("$message" "$( CALCULATE_PWM "$5" "$6" )")
+MESSAGE="0A$(CALCULATE_PWM "$1" "$2" || exit 1)"
+ROBOT_0=$?
+MESSAGE+="0B$(CALCULATE_PWM "$3" "$4" || exit 1)"
+ROBOT_1=$?
+MESSAGE+="0C$(CALCULATE_PWM "$5" "$6" || exit 1)"
+ROBOT_2=$?
 
 #echo "Mensagem Parcial: "
-#for i in "${message[@]}"
+#for i in "${MESSAGE[@]}"
 #do
 #	echo -n "$i"
 #done
 #echo "\n"
-################## Starts the checksum calculation operates on address
-
-for i in "${address[@]}"
+################## Starts the CHECK_SUM calculation operates on ADDRESS
+for i in "${ADDRESS[@]}"
 do
-   sum="$sum"+"$i"
-done
-################## After summing all address bytes, sums the message bytes
-for i in "${message[@]}"
-do
-   sum="$sum"+"$i"
-done
-################## Starts writing the finalMessage, concatenate header bytes on the final string
-   for i in "${header[@]}"
-do
-fullmessage="$fullmessage"" ""$i"
+   SUM+="$i"
 done
 
-################## Jumps to address bytes concatenating
-   for i in "${address[@]}"
+################## After SUMming all ADDRESS bytes, SUMs the MESSAGE bytes
+for i in "${MESSAGE[@]}"
 do
-fullmessage="$fullmessage"" ""$i"
-done
-################## Now it's time to put the message together
-   for i in "${message[@]}"
-do
-fullmessage="$fullmessage"" ""$i"
+   SUM+="$i"
 done
 
-################## Cuts the 8 digits from the sum variable after it's converted to binary 
-#sum=$(echo "obase=2;ibase=16;$sum" | bc ) #| tail -c 8)
-sum=$(echo "obase=2;ibase=16;$sum" | bc | tail -c 9)
+################## Starts writing the finalMessage, concatenate HEADER bytes on the final string
+for i in "${HEADER[@]}"
+do
+	FULL_MESSAGE+="$i"
+done
+
+################## Jumps to ADDRESS bytes concatenating
+for i in "${ADDRESS[@]}"
+do
+	FULL_MESSAGE+="$i"
+done
+
+################## Now it's time to put the MESSAGE together
+for i in "${MESSAGE[@]}"
+do
+	FULL_MESSAGE+="$i"
+done
+
+################## Cuts the 8 digits from the SUM variable after it's converted to binary 
+################## Cutting um more char to compensate for the control char LINE_FEED "0x0A" in hex 
+SUM=$(echo "obase=2;ibase=16;$SUM" | bc | tail -c 9)
 ################## Reconvert to HEXADECIMAL
-sum=$(echo "obase=16;ibase=2;$sum" | bc)
-################## Aplly the checksum calculation formula
-checksum=$(echo "obase=16;ibase=16;FF-$sum"| bc)
-################## Puts the checksum on the end of the message
-fullmessage="$fullmessage"" ""$checksum"
+SUM=$(echo "obase=16;ibase=2;$SUM" | bc)
+################## Aplly the CHECK_SUM calculation formula
+CHECK_SUM=$(echo "obase=16;ibase=16;FF-$SUM"| bc)
 
-################## returns the full message
-echo "$fullmessage"   |tr -d ' ' | cut -c 2-
+################## Puts the CHECK_SUM on the end of the MESSAGE
+FULL_MESSAGE+="$CHECK_SUM"
+
+################## returns the full MESSAGE
+if [[ "$ROBOT_0" == "0" && "$ROBOT_1" == "0" && "$ROBOT_2" == "0" ]] ; then 
+	echo "$FULL_MESSAGE"   |tr -d ' ' | cut -c 2-  
+else 
+	exit 1 
+fi 
 
