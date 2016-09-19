@@ -22,6 +22,7 @@
 #include "sstream"
 
 #define BROADCAST true
+#define OLD_TRANSMISSION false
 
 using namespace std;
 using namespace common;

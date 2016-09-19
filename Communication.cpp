@@ -106,15 +106,68 @@ void Communication::protocolsCommand(){
 bool Communication::sendSerialData(Command *cmd){
 	
 	#ifdef OLD_TRANSMISSION
-	
-		for(int i = 0 ; i < 3 ; i++)
-			vecCommand[i] = cmd[i];
-
-		protocolsCommand();
 		bool ok = true;
 
 		fd = open(serialPort.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
-		char str[2];
+		unsigned char str[12];
+		
+		/*
+			0 = inicio do pacote do robô 0
+			1 = inicio do pacote do robô 1
+			2 = inicio do pacote do robô 2
+			
+			5 = esquerda+ direita+
+			6 = esquerda- direita+
+			7 = esquerda+ direita-
+			8 = esquerda- direita-
+			
+			9 = tudo parado
+			exemplo do pacote: 0 5 255 255 1 5 255 255 2 5 255 255
+		*/
+
+		for(int i = 0 ; i < 3 ; i++){
+			if(cmd[i].left < 10){
+				cmd[i].left = 9;
+			}
+			if(cmd[i].right < 10){
+				cmd[i].right = 9;
+			}
+		}
+
+		stringstream ss;
+		int count = 0;
+		for(int i = 0 ; i < 3 ; i++){
+			ss << hex << i;
+			str[count] = stoi(ss.str().c_str(), 0, 16);
+			count++;
+			clearSS(ss);
+			
+			if(cmd[i].left <= 255 && cmd[i].right <= 255){
+				ss << hex << 5;
+			}else
+			if(cmd[i].left > 255 && cmd[i].right <= 255){
+				ss << hex << 6;
+			}else
+			if(cmd[i].left <= 255 && cmd[i].right > 255){
+				ss << hex << 7;
+			}else
+			if(cmd[i].left > 255 && cmd[i].right > 255){
+				ss << hex << 8;
+			}
+			str[count] = stoi(ss.str().c_str(), 0, 16);
+			count++;
+			clearSS(ss);
+
+			ss << hex << (int) cmd[i].left;
+			str[count] = stoi(ss.str().c_str(), 0, 16);
+			count++;
+			clearSS(ss);
+
+			ss << hex << (int) cmd[i].right;
+			str[count] = stoi(ss.str().c_str(), 0, 16);
+			count++;
+			clearSS(ss);
+		}
 
 		if (fd < 0) {
 			//printf ("Transmissor desconectado \n");
@@ -122,7 +175,7 @@ bool Communication::sendSerialData(Command *cmd){
 		}else{
 	    	setInterfaceAttribs();
 	    	setBlocking();
-	        write(fd, (char*)(&command), 8);
+	        write(fd, str, sizeof(str));
 	    }
 	    close(fd);
 	
